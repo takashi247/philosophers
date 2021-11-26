@@ -1,6 +1,6 @@
 # Program name
-philo
-philo_bonus
+philo/philo
+philo_bonus/philo_bonus
 
 # Prerequisites
 *.d
