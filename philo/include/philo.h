@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 23:09:36 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/18 17:04:31 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/19 22:16:25 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,20 @@
 # include <limits.h>
 
 # define MAX_NUM_THREADS 500
+# define THOUSAND 1000
+# define MESSAGE_TO_TAKE_FORK "%ld %d has taken fork\n"
+# define MESSAGE_TO_EAT "%ld %d is eating\n"
+# define MESSAGE_TO_SLEEP "%ld %d is sleeping\n"
+# define MESSAGE_TO_THINK "%ld %d is thinking\n"
 
 typedef struct s_config
 {
 	int				num_of_philos;
-	int				time_to_die;
-	int				time_to_eat;
-	int				time_to_sleep;
+	unsigned int	time_to_die;
+	unsigned int	time_to_eat;
+	unsigned int	time_to_sleep;
 	int				num_of_must_eat;
+	pthread_mutex_t	screen;
 	pthread_mutex_t	forks[MAX_NUM_THREADS / 2];
 }	t_config;
 
@@ -50,7 +56,7 @@ int		ft_isdigit(int c);
 /* ft_atoi_s.c */
 int		ft_atoi_s(const char *str);
 
-/* ft_isint.c */
-t_bool	ft_isint(const char *str);
+/* ft_isposint.c */
+t_bool	ft_isposint(const char *str);
 
 #endif
