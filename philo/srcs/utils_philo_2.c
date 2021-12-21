@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strncmp.c                                       :+:      :+:    :+:   */
+/*   utils_philo_2.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/12/21 14:12:40 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/21 14:13:34 by tnishina         ###   ########.fr       */
+/*   Created: 2021/12/21 22:01:11 by tnishina          #+#    #+#             */
+/*   Updated: 2021/12/21 22:07:14 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,4 +29,33 @@ int
 		i++;
 	}
 	return (0);
+}
+
+void
+	ft_putstr_fd(char *s, int fd)
+{
+	size_t	len_s;
+
+	if (s && 0 <= fd)
+	{
+		len_s = ft_strlen(s);
+		write(fd, s, len_s);
+	}
+}
+
+void
+	ft_putchar_fd(char c, int fd)
+{
+	if (0 <= fd)
+		write(fd, &c, 1);
+}
+
+void
+	ft_putendl_fd(char *s, int fd)
+{
+	if (s && 0 <= fd)
+	{
+		ft_putstr_fd(s, fd);
+		ft_putchar_fd('\n', fd);
+	}
 }

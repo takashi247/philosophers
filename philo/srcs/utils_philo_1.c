@@ -1,27 +1,77 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_atoi_s.c                                        :+:      :+:    :+:   */
+/*   utils_philo_1.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/12/17 23:56:36 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/17 23:57:06 by tnishina         ###   ########.fr       */
+/*   Created: 2021/12/21 22:06:06 by tnishina          #+#    #+#             */
+/*   Updated: 2021/12/21 22:11:26 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-static int
+static t_bool
 	is_overflow(long l_num, char c)
 {
 	if (l_num > INT_MAX / 10
 		|| (l_num == INT_MAX / 10 && c - '0' > INT_MAX % 10)
 		|| l_num < INT_MIN / 10
 		|| (l_num == INT_MIN / 10 && c - '0' > INT_MIN % 10 * -1))
-		return (1);
+		return (TRUE);
 	else
-		return (0);
+		return (FALSE);
+}
+
+size_t
+	ft_strlen(const char *s)
+{
+	size_t	len;
+
+	len = 0;
+	while (s[len])
+		len++;
+	return (len);
+}
+
+int
+	ft_isdigit(int c)
+{
+	return ('0' <= c && c <= '9');
+}
+
+/*
+** return true if a number given as string is a valid positive integer
+** within int range
+*/
+
+t_bool
+	ft_isposint(const char *str)
+{
+	long	l_num;
+
+	l_num = 0;
+	while (*str == '\t' || *str == '\n' || *str == '\v'
+		|| *str == '\f' || *str == '\r' || *str == ' ')
+		str++;
+	if (*str == '+' || *str == '-')
+	{
+		if (*str == '-')
+			return (FALSE);
+		str++;
+	}
+	if (!*str || (*str == '0' && ft_isdigit(*(str + 1))))
+		return (FALSE);
+	while (ft_isdigit(*str))
+	{
+		if (is_overflow(l_num, *str))
+			return (FALSE);
+		l_num = l_num * 10 + (*str++ - '0');
+	}
+	if (*str)
+		return (FALSE);
+	return (TRUE);
 }
 
 /*
