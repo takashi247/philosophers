@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/21 23:53:30 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/22 00:28:01 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -289,7 +289,6 @@ t_bool
 {
 	int			i;
 	long		current_time;
-	long		time_of_death;
 	const int	num_of_philos = config->num_of_philos;
 	const long	time_to_die = (long)config->time_to_die;
 
@@ -305,8 +304,7 @@ t_bool
 			config->is_dead = TRUE;
 			pthread_mutex_unlock(&(config->dead_lock));
 			pthread_mutex_lock(&(config->screen_lock));
-			time_of_death = philos[i].last_meal_time + time_to_die;
-			print_msg(MESSAGE_TO_DIE, time_of_death, philos[i].philo_id);
+			print_msg(MESSAGE_TO_DIE, get_time(), philos[i].philo_id);
 			pthread_mutex_unlock(&(config->screen_lock));
 			return (FALSE);
 		}
