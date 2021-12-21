@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/21 17:48:19 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/21 21:10:01 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,13 +68,22 @@ t_bool
 		return (FALSE);
 }
 
-t_bool
-	take_fork_n_eat(t_philo *philo, pthread_mutex_t *fork, pthread_mutex_t *screen)
+void
+	drop_forks(pthread_mutex_t *right_fork, pthread_mutex_t *left_fork)
 {
-	if (philo->philo_id == 1
-		&& fork == &(philo->config->forks[0]))
+	pthread_mutex_unlock(right_fork);
+	pthread_mutex_unlock(left_fork);
+}
+
+t_bool
+	take_fork_n_eat(t_philo *philo, pthread_mutex_t *right_fork, pthread_mutex_t *left_fork, pthread_mutex_t *screen)
+{
+	if (philo->philo_id == 1 && left_fork == &(philo->config->forks[0]))
+	{
+		pthread_mutex_unlock(right_fork);
 		return (FALSE);
-	pthread_mutex_lock(fork);
+	}
+	pthread_mutex_lock(left_fork);
 	pthread_mutex_lock(screen);
 	if (print_status(philo, MESSAGE_TO_TAKE_FORK, NULL)
 		&& print_status(philo, MESSAGE_TO_EAT, NULL))
@@ -84,16 +93,10 @@ t_bool
 	}
 	else
 	{
+		drop_forks(right_fork, left_fork);
 		pthread_mutex_unlock(screen);
 		return (FALSE);
 	}
-}
-
-void
-	drop_forks(pthread_mutex_t *right_fork, pthread_mutex_t *left_fork)
-{
-	pthread_mutex_unlock(right_fork);
-	pthread_mutex_unlock(left_fork);
 }
 
 void
@@ -130,7 +133,7 @@ void
 	while (1)
 	{
 		if (!take_fork(philo, right_fork, screen)
-			|| !take_fork_n_eat(philo, left_fork, screen))
+			|| !take_fork_n_eat(philo, right_fork, left_fork, screen))
 			break ;
 		sleep_in_millisecond(philo->config->time_to_eat);
 		drop_forks(right_fork, left_fork);
@@ -226,6 +229,7 @@ t_bool
 		pthread_mutex_lock(&(philos[i].meal_time_lock));
 		if (current_time - philos[i].last_meal_time >= time_to_die)
 		{
+			pthread_mutex_unlock(&(philos[i].meal_time_lock));
 			pthread_mutex_lock(&(config->dead_lock));
 			config->is_dead = TRUE;
 			pthread_mutex_unlock(&(config->dead_lock));
@@ -233,7 +237,6 @@ t_bool
 			time_of_death = philos[i].last_meal_time + time_to_die;
 			printf(MESSAGE_TO_DIE, time_of_death, philos[i].philo_id);
 			pthread_mutex_unlock(&(config->screen_lock));
-			pthread_mutex_unlock(&(philos[i].meal_time_lock));
 			return (FALSE);
 		}
 		pthread_mutex_unlock(&(philos[i].meal_time_lock));
