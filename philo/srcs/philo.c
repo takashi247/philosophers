@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/21 23:39:17 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/21 23:53:30 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,7 +133,10 @@ t_bool
 	if (print_status(philo, MESSAGE_TO_TAKE_FORK, screen))
 		return (TRUE);
 	else
+	{
+		pthread_mutex_unlock(fork);
 		return (FALSE);
+	}
 }
 
 void
