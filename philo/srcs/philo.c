@@ -6,11 +6,18 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/19 23:30:55 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/21 17:48:19 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
+
+// function for leak check
+
+// __attribute__((destructor))
+// static void destructor() {
+//     system("leaks -q philo");
+// }
 
 long
 	get_time(void)
@@ -24,39 +31,62 @@ long
 	return (milliseconds);
 }
 
-void
-	print_status(int philo_id, char *msg, pthread_mutex_t *screen)
+t_bool
+	print_status(t_philo *philo, char *msg, pthread_mutex_t *screen)
 {
+	long	current_time;
+
+	pthread_mutex_lock(&(philo->config->dead_lock));
+	if (philo->config->is_dead)
+	{
+		pthread_mutex_unlock(&(philo->config->dead_lock));
+		return (FALSE);
+	}
+	pthread_mutex_unlock(&(philo->config->dead_lock));
 	if (screen)
 		pthread_mutex_lock(screen);
-	printf(msg, get_time(), philo_id);
+	current_time = get_time();
+	if (!ft_strncmp(msg, MESSAGE_TO_EAT, ft_strlen(MESSAGE_TO_EAT)))
+	{
+		pthread_mutex_lock(&(philo->meal_time_lock));
+		philo->last_meal_time = current_time;
+		pthread_mutex_unlock(&(philo->meal_time_lock));
+	}
+	printf(msg, current_time, philo->philo_id);
 	if (screen)
 		pthread_mutex_unlock(screen);
+	return (TRUE);
 }
 
-void
-	*monitor_philo(void *arg)
-{
-	(void)arg;
-	return ((void *)EXIT_SUCCESS);
-}
-
-void
-	take_fork(int id, pthread_mutex_t *fork, pthread_mutex_t *screen)
+t_bool
+	take_fork(t_philo *philo, pthread_mutex_t *fork, pthread_mutex_t *screen)
 {
 	pthread_mutex_lock(fork);
-	print_status(id, MESSAGE_TO_TAKE_FORK, screen);
+	if (print_status(philo, MESSAGE_TO_TAKE_FORK, screen))
+		return (TRUE);
+	else
+		return (FALSE);
 }
 
-void
-	take_fork_n_eat(int id, pthread_mutex_t *fork, pthread_mutex_t *screen)
+t_bool
+	take_fork_n_eat(t_philo *philo, pthread_mutex_t *fork, pthread_mutex_t *screen)
 {
-
+	if (philo->philo_id == 1
+		&& fork == &(philo->config->forks[0]))
+		return (FALSE);
 	pthread_mutex_lock(fork);
 	pthread_mutex_lock(screen);
-	print_status(id, MESSAGE_TO_TAKE_FORK, NULL);
-	print_status(id, MESSAGE_TO_EAT, NULL);
-	pthread_mutex_unlock(screen);
+	if (print_status(philo, MESSAGE_TO_TAKE_FORK, NULL)
+		&& print_status(philo, MESSAGE_TO_EAT, NULL))
+	{
+		pthread_mutex_unlock(screen);
+		return (TRUE);
+	}
+	else
+	{
+		pthread_mutex_unlock(screen);
+		return (FALSE);
+	}
 }
 
 void
@@ -82,12 +112,14 @@ void
 void
 	*loop_philo(void *arg)
 {
-	const t_philo	*philo = (t_philo *)arg;
+	t_philo			*philo;
 	pthread_mutex_t	*screen;
 	pthread_mutex_t	*right_fork;
 	pthread_mutex_t	*left_fork;
 
-	screen = &(philo->config->screen);
+	philo = (t_philo *)arg;
+	philo->last_meal_time = get_time();
+	screen = &(philo->config->screen_lock);
 	right_fork = &(philo->config->forks[philo->philo_id - 1]);
 	if (philo->philo_id < philo->config->num_of_philos)
 		left_fork = &(philo->config->forks[philo->philo_id]);
@@ -95,18 +127,24 @@ void
 		left_fork = &(philo->config->forks[0]);
 	if (philo->philo_id % 2 == 0)
 		usleep(200);
-	take_fork(philo->philo_id, right_fork, screen);
-	take_fork_n_eat(philo->philo_id, left_fork, screen);
-	sleep_in_millisecond(philo->config->time_to_eat);
-	drop_forks(right_fork, left_fork);
-	print_status(philo->philo_id, MESSAGE_TO_SLEEP, screen);
-	sleep_in_millisecond(philo->config->time_to_sleep);
-	print_status(philo->philo_id, MESSAGE_TO_THINK, screen);
+	while (1)
+	{
+		if (!take_fork(philo, right_fork, screen)
+			|| !take_fork_n_eat(philo, left_fork, screen))
+			break ;
+		sleep_in_millisecond(philo->config->time_to_eat);
+		drop_forks(right_fork, left_fork);
+		if (!print_status(philo, MESSAGE_TO_SLEEP, screen))
+			break ;
+		sleep_in_millisecond(philo->config->time_to_sleep);
+		if (!print_status(philo, MESSAGE_TO_THINK, screen))
+			break ;
+	}
 	return ((void *)EXIT_SUCCESS);
 }
 
 t_bool
-	ft_init_philo(t_config *config, int ac, char **av)
+	ft_init_config(t_config **config, int ac, char **av)
 {
 	int	i;
 	int	ret;
@@ -114,62 +152,176 @@ t_bool
 	if (!ft_isposint(av[1]) || !ft_isposint(av[2]) || !ft_isposint(av[3])
 		|| !ft_isposint(av[4]) || (ac == 6 && !ft_isposint(av[5])))
 		return (FALSE);
-	config->num_of_philos = ft_atoi_s(av[1]);
-	config->time_to_die = (unsigned int)ft_atoi_s(av[2]);
-	config->time_to_eat = (unsigned int)ft_atoi_s(av[3]);
-	config->time_to_sleep = (unsigned int)ft_atoi_s(av[4]);
-	if (ac == 6)
-		config->num_of_must_eat = ft_atoi_s(av[5]);
-	if (config->num_of_philos > MAX_NUM_THREADS / 2)
+	*config = (t_config *)malloc(sizeof(t_config));
+	if (!(*config))
 		return (FALSE);
-	i = 0;
-	while (i < config->num_of_philos)
+	(*config)->num_of_philos = ft_atoi_s(av[1]);
+	(*config)->time_to_die = (unsigned int)ft_atoi_s(av[2]);
+	(*config)->time_to_eat = (unsigned int)ft_atoi_s(av[3]);
+	(*config)->time_to_sleep = (unsigned int)ft_atoi_s(av[4]);
+	(*config)->is_dead = FALSE;
+	if (ac == 6)
+		(*config)->num_of_must_eat = ft_atoi_s(av[5]);
+	if ((*config)->num_of_philos > MAX_NUM_THREADS)
+		return (FALSE);
+	(*config)->forks = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t) * ((*config)->num_of_philos));
+	if (!((*config)->forks))
 	{
-		ret = pthread_mutex_init(&(config->forks[i]), NULL);
+		free(*config);
+		*config = NULL;
+		return (FALSE);
+	}
+	i = 0;
+	while (i < (*config)->num_of_philos)
+	{
+		ret = pthread_mutex_init(&((*config)->forks[i]), NULL);
 		if (ret != 0)
 			return (FALSE);
 		i++;
 	}
-	ret = pthread_mutex_init(&(config->screen), NULL);
+	ret = pthread_mutex_init(&((*config)->screen_lock), NULL);
 	if (ret != 0)
 		return (FALSE);
+	ret = pthread_mutex_init(&((*config)->dead_lock), NULL);
+	if (ret != 0)
+		return (FALSE);
+	return (TRUE);
+}
+
+t_philo
+	*ft_create_philo(int i, t_config *conf)
+{
+	t_philo	*philo;
+	int		ret;
+
+	philo = (t_philo *)malloc(sizeof(t_philo));
+	if (!philo)
+		return (NULL);
+	ret = pthread_mutex_init(&(philo->meal_time_lock), NULL);
+	if (ret != 0)
+	{
+		free(philo);
+		philo = NULL;
+		return (NULL);
+	}
+	philo->philo_id = i + 1;
+	philo->last_meal_time = get_time();
+	philo->config = conf;
+	return (philo);
+}
+
+t_bool
+	ft_monitor_philos(t_config *config, t_philo *philos)
+{
+	int			i;
+	long		current_time;
+	long		time_of_death;
+	const int	num_of_philos = config->num_of_philos;
+	const long	time_to_die = (long)config->time_to_die;
+
+	i = 0;
+	while(i < num_of_philos)
+	{
+		current_time = get_time();
+		pthread_mutex_lock(&(philos[i].meal_time_lock));
+		if (current_time - philos[i].last_meal_time >= time_to_die)
+		{
+			pthread_mutex_lock(&(config->dead_lock));
+			config->is_dead = TRUE;
+			pthread_mutex_unlock(&(config->dead_lock));
+			pthread_mutex_lock(&(config->screen_lock));
+			time_of_death = philos[i].last_meal_time + time_to_die;
+			printf(MESSAGE_TO_DIE, time_of_death, philos[i].philo_id);
+			pthread_mutex_unlock(&(config->screen_lock));
+			pthread_mutex_unlock(&(philos[i].meal_time_lock));
+			return (FALSE);
+		}
+		pthread_mutex_unlock(&(philos[i].meal_time_lock));
+		i++;
+	}
 	return (TRUE);
 }
 
 int
 	main(int ac, char **av)
 {
-	int				ret[2];
-	pthread_t		ths[MAX_NUM_THREADS];
-	t_config		config;
-	t_philo			philos[MAX_NUM_THREADS / 2];
+	int				ret;
+	pthread_t		*ths;
+	t_config		*config;
+	t_philo			*philos;
 	int				i;
 
-	if (ac <= 4 || 7 <= ac || !ft_init_philo(&config, ac, av))
+	if (ac <= 4 || 7 <= ac || !ft_init_config(&config, ac, av))
 		return (EXIT_FAILURE);
-	i = 0;
-	while (i < config.num_of_philos)
+	ths = (pthread_t *)malloc(sizeof(pthread_t) * config->num_of_philos);
+	philos = (t_philo *)malloc(sizeof(t_philo) * config->num_of_philos);
+	if (!ths || !philos)
 	{
-		philos[i].philo_id = i + 1;
-		philos[i].config = &config;
-		ret[0] = pthread_create(&ths[i * 2], NULL, loop_philo, &philos[i]);
-		ret[1] = pthread_create(&ths[i * 2 + 1], NULL, monitor_philo, &philos[i]);
-		if (ret[0] != 0 || ret[1] != 0)
+		free(config);
+		config = NULL;
+		if (ths)
+		{
+			free(ths);
+			ths = NULL;
+		}
+		return (EXIT_FAILURE);
+	}
+	i = 0;
+	while (i < config->num_of_philos)
+	{
+		ret = pthread_mutex_init(&(philos[i].meal_time_lock), NULL);
+		if (ret != 0)
+		{
+			// stop threads currently running
+			free(philos);
+			philos = NULL;
+			free(config);
+			config = NULL;
 			return (EXIT_FAILURE);
+		}
+		philos[i].philo_id = i + 1;
+		philos[i].last_meal_time = get_time();
+		philos[i].config = config;
+		ret = pthread_create(&ths[i], NULL, loop_philo, &philos[i]);
+		if (ret != 0)
+		{
+			// stop threads currently running
+			free(philos);
+			philos = NULL;
+			free(config);
+			config = NULL;
+			return (EXIT_FAILURE);
+		}
 		i++;
+	}
+	while (1)
+	{
+		if (!ft_monitor_philos(config, philos))
+			break;
+		sleep_in_millisecond(MONITORING_INTERVAL);
 	}
 	i = 0;
-	while (i < config.num_of_philos)
+	while (i < config->num_of_philos)
 	{
-		pthread_join(ths[i * 2], NULL);
-		pthread_join(ths[i * 2 + 1], NULL);
+		pthread_join(ths[i], NULL);
 		i++;
 	}
+	free(ths);
+	ths = NULL;
 	i = 0;
-	while (i < config.num_of_philos)
+	while (i < config->num_of_philos)
 	{
-		pthread_mutex_destroy(&(config.forks[i]));
+		pthread_mutex_destroy(&(config->forks[i]));
+		pthread_mutex_destroy(&(philos[i].meal_time_lock));
 		i++;
 	}
+	free(config->forks);
+	config->forks = NULL;
+	free(philos);
+	philos = NULL;
+	pthread_mutex_destroy(&(config->screen_lock));
+	pthread_mutex_destroy(&(config->dead_lock));
+	free(config);
+	config = NULL;
 	return (EXIT_SUCCESS);
 }
