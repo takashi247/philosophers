@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/21 21:10:01 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/21 23:39:17 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,71 @@
 // static void destructor() {
 //     system("leaks -q philo");
 // }
+
+void
+	ft_safe_free(char **str)
+{
+	if (*str)
+		free(*str);
+	*str = NULL;
+}
+
+char
+	*create_msg(char *msg, char *str_time, char *str_id)
+{
+	char	*str_combined;
+	char	*tmp;
+
+	str_combined = ft_strjoin(str_time, " ");
+	if (!str_combined)
+		return (NULL);
+	tmp = str_combined;
+	str_combined = ft_strjoin(tmp, str_id);
+	ft_safe_free(&tmp);
+	if (!str_combined)
+		return (NULL);
+	tmp = str_combined;
+	str_combined = ft_strjoin(tmp, " ");
+	ft_safe_free(&tmp);
+	if (!str_combined)
+		return (NULL);
+	tmp = str_combined;
+	str_combined = ft_strjoin(tmp, msg);
+	ft_safe_free(&tmp);
+	if (!str_combined)
+		return (NULL);
+	return (str_combined);
+}
+
+t_bool
+	print_msg(char *msg, long current_time, int philo_id)
+{
+	char	*str_time;
+	char	*str_id;
+	char	*str_combined;
+	t_bool	res;
+
+	res = TRUE;
+	str_time = ft_convert_time2str(current_time);
+	if (str_time)
+		str_id = ft_itoa(philo_id);
+	if (!str_time || !str_id)
+	{
+		if (str_time)
+			ft_safe_free(&str_time);
+		res = FALSE;
+		return (res);
+	}
+	str_combined = create_msg(msg, str_time, str_id);
+	if (!str_combined)
+		res = FALSE;
+	else
+		ft_putstr_fd(str_combined, STDOUT_FILENO);
+	ft_safe_free(&str_combined);
+	ft_safe_free(&str_time);
+	ft_safe_free(&str_id);
+	return (res);
+}
 
 long
 	get_time(void)
@@ -35,14 +100,8 @@ t_bool
 	print_status(t_philo *philo, char *msg, pthread_mutex_t *screen)
 {
 	long	current_time;
+	t_bool	res;
 
-	pthread_mutex_lock(&(philo->config->dead_lock));
-	if (philo->config->is_dead)
-	{
-		pthread_mutex_unlock(&(philo->config->dead_lock));
-		return (FALSE);
-	}
-	pthread_mutex_unlock(&(philo->config->dead_lock));
 	if (screen)
 		pthread_mutex_lock(screen);
 	current_time = get_time();
@@ -52,10 +111,19 @@ t_bool
 		philo->last_meal_time = current_time;
 		pthread_mutex_unlock(&(philo->meal_time_lock));
 	}
-	printf(msg, current_time, philo->philo_id);
+	pthread_mutex_lock(&(philo->config->dead_lock));
+	if (philo->config->is_dead)
+	{
+		pthread_mutex_unlock(&(philo->config->dead_lock));
+		if (screen)
+			pthread_mutex_unlock(screen);
+		return (FALSE);
+	}
+	pthread_mutex_unlock(&(philo->config->dead_lock));
+	res = print_msg(msg, current_time, philo->philo_id);
 	if (screen)
 		pthread_mutex_unlock(screen);
-	return (TRUE);
+	return (res);
 }
 
 t_bool
@@ -235,7 +303,7 @@ t_bool
 			pthread_mutex_unlock(&(config->dead_lock));
 			pthread_mutex_lock(&(config->screen_lock));
 			time_of_death = philos[i].last_meal_time + time_to_die;
-			printf(MESSAGE_TO_DIE, time_of_death, philos[i].philo_id);
+			print_msg(MESSAGE_TO_DIE, time_of_death, philos[i].philo_id);
 			pthread_mutex_unlock(&(config->screen_lock));
 			return (FALSE);
 		}

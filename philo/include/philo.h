@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 23:09:36 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/21 15:44:08 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/21 22:37:58 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,11 @@
 # define MAX_NUM_THREADS 300
 # define THOUSAND 1000
 # define MONITORING_INTERVAL 5
-# define MESSAGE_TO_TAKE_FORK "%ld %d has taken a fork\n"
-# define MESSAGE_TO_EAT "%ld %d is eating\n"
-# define MESSAGE_TO_SLEEP "%ld %d is sleeping\n"
-# define MESSAGE_TO_THINK "%ld %d is thinking\n"
-# define MESSAGE_TO_DIE "%ld %d died\n"
+# define MESSAGE_TO_TAKE_FORK "has taken a fork\n"
+# define MESSAGE_TO_EAT "is eating\n"
+# define MESSAGE_TO_SLEEP "is sleeping\n"
+# define MESSAGE_TO_THINK "is thinking\n"
+# define MESSAGE_TO_DIE "died\n"
 
 typedef enum e_bool
 {
@@ -56,19 +56,28 @@ typedef struct s_philo
 	t_config		*config;
 }	t_philo;
 
-/* ft_isdigit.c */
+/* utils_philo_1.c */
 int		ft_isdigit(int c);
-
-/* ft_atoi_s.c */
 int		ft_atoi_s(const char *str);
-
-/* ft_isposint.c */
 t_bool	ft_isposint(const char *str);
-
-/* ft_strlen.c */
 size_t	ft_strlen(const char *s);
 
-/* ft_strncmp.c */
+/* utils_philo_2.c */
+void	ft_putstr_fd(char *s, int fd);
+void	ft_putchar_fd(char c, int fd);
+void	ft_putendl_fd(char *s, int fd);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
+
+/* utils_philo_3.c */
+size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize);
+size_t	ft_strlcat(char *dst, const char *src, size_t dstsize);
+char	*ft_strdup(const char *s1);
+char	*ft_strjoin(char const *s1, char const *s2);
+
+/* ft_itoa.c */
+char	*ft_itoa(int n);
+
+/* ft_convert_time2str.c */
+char	*ft_convert_time2str(long time);
 
 #endif
