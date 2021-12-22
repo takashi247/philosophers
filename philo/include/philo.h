@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 23:09:36 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/22 09:41:55 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/22 11:25:03 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 # define MAX_NUM_THREADS 300
 # define THOUSAND 1000
 # define MONITORING_INTERVAL 200
+# define INITIAL_USLEEP_VALUE 1000
 # define MESSAGE_TO_TAKE_FORK "has taken a fork\n"
 # define MESSAGE_TO_EAT "is eating\n"
 # define MESSAGE_TO_SLEEP "is sleeping\n"

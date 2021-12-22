@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/22 09:40:53 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/22 11:25:10 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,9 +178,9 @@ void
 
 	while (get_time() - start_time < time_to_sleep)
 	{
-		(void)micro_sec;
-		// micro_sec /= 2;
-		usleep(1000);
+		micro_sec = INITIAL_USLEEP_VALUE;
+		micro_sec /= 2;
+		usleep(micro_sec);
 	}
 }
 
