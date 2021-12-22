@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/22 00:28:01 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/22 09:40:53 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,8 +178,9 @@ void
 
 	while (get_time() - start_time < time_to_sleep)
 	{
-		micro_sec /= 2;
-		usleep(micro_sec);
+		(void)micro_sec;
+		// micro_sec /= 2;
+		usleep(1000);
 	}
 }
 
@@ -370,7 +371,7 @@ int
 	{
 		if (!ft_monitor_philos(config, philos))
 			break;
-		sleep_in_millisecond(MONITORING_INTERVAL);
+		usleep(MONITORING_INTERVAL);
 	}
 	i = 0;
 	while (i < config->num_of_philos)
