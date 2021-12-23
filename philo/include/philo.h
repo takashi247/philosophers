@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 23:09:36 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/23 14:59:33 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/24 01:16:43 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,13 +23,15 @@
 
 # define MAX_NUM_THREADS 300
 # define THOUSAND 1000
-# define MONITORING_INTERVAL 200
+# define MONITORING_INTERVAL 500
 # define INITIAL_USLEEP_VALUE 1000
+# define NO_NUM_OF_MUST_EAT -1
 # define MESSAGE_TO_TAKE_A_FORK "has taken a fork\n"
 # define MESSAGE_TO_EAT "is eating\n"
 # define MESSAGE_TO_SLEEP "is sleeping\n"
 # define MESSAGE_TO_THINK "is thinking\n"
 # define MESSAGE_TO_DIE "died\n"
+# define ERROR_MESSAGE "Error\n"
 
 typedef enum e_bool
 {
@@ -49,14 +51,16 @@ typedef struct s_config
 	pthread_mutex_t	screen_lock;
 	pthread_mutex_t	*forks;
 	t_bool			*are_forks_taken;
+	t_bool			*are_meals_completed;
 }	t_config;
 
 typedef struct s_philo
 {
-	int				philo_id;
-	long			last_meal_time;
-	int				num_of_meals_completed;
-	t_config		*config;
+	int			philo_id;
+	long		last_meal_time;
+	int			num_of_meals_completed;
+	t_bool		*is_meal_completed;
+	t_config	*config;
 }	t_philo;
 
 typedef struct s_fork

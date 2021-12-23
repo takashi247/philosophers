@@ -2,6 +2,9 @@
 philo/philo
 philo_bonus/philo_bonus
 
+# vscode config
+.vscode/*
+
 # Prerequisites
 *.d
 

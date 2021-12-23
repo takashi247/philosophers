@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/21 22:06:06 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/21 22:11:26 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/24 01:10:41 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ t_bool
 			return (FALSE);
 		str++;
 	}
-	if (!*str || (*str == '0' && ft_isdigit(*(str + 1))))
+	if (!*str || *str == '0')
 		return (FALSE);
 	while (ft_isdigit(*str))
 	{

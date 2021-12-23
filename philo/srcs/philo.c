@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/23 15:02:32 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/24 01:16:36 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,12 +97,17 @@ long
 }
 
 void
+	drop_a_fork(t_fork *fork)
+{
+	*(fork->is_taken) = FALSE;
+	pthread_mutex_unlock(fork->fork_lock);
+}
+
+void
 	ft_drop_forks(t_fork *right_fork, t_fork *left_fork)
 {
-	*(right_fork->is_taken) = FALSE;
-	pthread_mutex_unlock(right_fork->fork_lock);
-	*(left_fork->is_taken) = FALSE;
-	pthread_mutex_unlock(left_fork->fork_lock);
+	drop_a_fork(right_fork);
+	drop_a_fork(left_fork);
 }
 
 void
@@ -142,6 +147,13 @@ void
 			philo->config->is_completed = TRUE;
 		if (!ft_strncmp(msg, MESSAGE_TO_EAT, ft_strlen(MESSAGE_TO_EAT)))
 			philo->last_meal_time = current_time;
+		if (!ft_strncmp(msg, MESSAGE_TO_SLEEP, ft_strlen(MESSAGE_TO_SLEEP)))
+		{
+			philo->num_of_meals_completed++;
+			if (philo->config->num_of_must_eat != NO_NUM_OF_MUST_EAT
+				&& philo->num_of_meals_completed == philo->config->num_of_must_eat)
+				*(philo->is_meal_completed) = TRUE;
+		}
 	}
 	pthread_mutex_unlock(&(philo->config->screen_lock));
 }
@@ -174,28 +186,6 @@ void
 {
 	print_log(philo, MESSAGE_TO_THINK);
 }
-
-// t_bool
-// 	ft_is_dead(t_philo *philo)
-// {
-// 	t_bool	res;
-
-// 	pthread_mutex_lock(&(philo->config->screen_lock));
-// 	res = philo->config->is_dead;
-// 	pthread_mutex_unlock(&(philo->config->screen_lock));
-// 	return (res);
-// }
-
-// t_bool
-// 	ft_is_completed(t_philo *philo)
-// {
-// 	t_bool	res;
-
-// 	pthread_mutex_lock(&(philo->config->screen_lock));
-// 	res = philo->config->is_completed;
-// 	pthread_mutex_unlock(&(philo->config->screen_lock));
-// 	return (res);
-// }
 
 t_bool
 	ft_is_loop_end(t_philo *philo)
@@ -236,6 +226,13 @@ void
 	if (philo->philo_id % 2 == 0)
 		usleep(200);
 	find_forks(&right_fork, &left_fork, philo);
+	if (philo->config->num_of_philos == 1)
+	{
+		take_a_fork(&right_fork);
+		print_log(philo, MESSAGE_TO_TAKE_A_FORK);
+		drop_a_fork(&right_fork);
+		return ((void *)EXIT_SUCCESS);
+	}
 	while (!ft_is_loop_end(philo))
 	{
 		ft_take_forks(philo, &right_fork, &left_fork);
@@ -247,11 +244,45 @@ void
 	return ((void *)EXIT_SUCCESS);
 }
 
+void
+	ft_destroy_forks(t_config *config, int num_of_forks)
+{
+	int i;
+
+	i = 0;
+	while (i < num_of_forks)
+	{
+		pthread_mutex_destroy(&(config->forks[i]));
+		i++;
+	}
+}
+
+void
+	ft_clear_config(t_config **config)
+{
+	if ((*config)->forks)
+	{
+		free((*config)->forks);
+		(*config)->forks = NULL;
+	}
+	if ((*config)->are_forks_taken)
+	{
+		free((*config)->are_forks_taken);
+		(*config)->are_forks_taken = NULL;
+	}
+	if ((*config)->are_meals_completed)
+	{
+		free((*config)->are_meals_completed);
+		(*config)->are_meals_completed = NULL;
+	}
+	free(*config);
+	*config = NULL;
+}
+
 t_bool
 	ft_init_config(t_config **config, int ac, char **av)
 {
 	int	i;
-	int	ret;
 
 	if (!ft_isposint(av[1]) || !ft_isposint(av[2]) || !ft_isposint(av[3])
 		|| !ft_isposint(av[4]) || (ac == 6 && !ft_isposint(av[5])))
@@ -267,34 +298,47 @@ t_bool
 	(*config)->is_completed = FALSE;
 	if (ac == 6)
 		(*config)->num_of_must_eat = ft_atoi_s(av[5]);
+	else
+		(*config)->num_of_must_eat = NO_NUM_OF_MUST_EAT;
 	if ((*config)->num_of_philos > MAX_NUM_THREADS)
 		return (FALSE);
 	(*config)->forks = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t) * ((*config)->num_of_philos));
-	if ((*config)->forks)
-		(*config)->are_forks_taken = (t_bool *)malloc(sizeof(t_bool) * ((*config)->num_of_philos));
-	if (!((*config)->forks) || !((*config)->are_forks_taken))
+	(*config)->are_forks_taken = (t_bool *)malloc(sizeof(t_bool) * ((*config)->num_of_philos));
+	(*config)->are_meals_completed = (t_bool *)malloc(sizeof(t_bool) * ((*config)->num_of_philos));
+	if (!((*config)->forks) || !((*config)->are_forks_taken) || !((*config)->are_meals_completed))
 	{
-		if ((*config)->forks)
-		{
-			free((*config)->forks);
-			(*config)->forks = NULL;
-		}
-		free(*config);
-		*config = NULL;
+		ft_clear_config(config);
 		return (FALSE);
 	}
 	memset((*config)->are_forks_taken, 0, sizeof(t_bool) * ((*config)->num_of_philos));
+	memset((*config)->are_meals_completed, 0, sizeof(t_bool) * ((*config)->num_of_philos));
 	i = 0;
 	while (i < (*config)->num_of_philos)
 	{
-		ret = pthread_mutex_init(&((*config)->forks[i]), NULL);
-		if (ret != 0)
+		if (pthread_mutex_init(&((*config)->forks[i]), NULL))
+		{
+			ft_destroy_forks(*config, i);
+			return (FALSE);
+		}
+		i++;
+	}
+	if (pthread_mutex_init(&((*config)->screen_lock), NULL))
+		return (FALSE);
+	return (TRUE);
+}
+
+t_bool
+	check_meals_completed(t_philo *philo)
+{
+	int	i;
+
+	i = 0;
+	while (i < philo->config->num_of_philos)
+	{
+		if (!philo->config->are_meals_completed[i])
 			return (FALSE);
 		i++;
 	}
-	ret = pthread_mutex_init(&((*config)->screen_lock), NULL);
-	if (ret != 0)
-		return (FALSE);
 	return (TRUE);
 }
 
@@ -311,17 +355,17 @@ void
 	time_to_die = (long)philo->config->time_to_die;
 	while(!ft_is_loop_end(philo))
 	{
-		current_time = get_time();
+		usleep(MONITORING_INTERVAL);
 		pthread_mutex_lock(&(config->screen_lock));
+		current_time = get_time();
 		if (current_time - philo->last_meal_time >= time_to_die)
 		{
 			config->is_dead = TRUE;
 			print_msg(MESSAGE_TO_DIE, current_time, philo->philo_id);
-			pthread_mutex_unlock(&(config->screen_lock));
-			break;
 		}
+		if (check_meals_completed(philo))
+			config->is_completed = TRUE;
 		pthread_mutex_unlock(&(config->screen_lock));
-		usleep(MONITORING_INTERVAL);
 	}
 	return ((void *)EXIT_SUCCESS);
 }
@@ -340,6 +384,8 @@ t_philo
 	{
 		philos[i].philo_id = i + 1;
 		philos[i].last_meal_time = get_time();
+		philos[i].num_of_meals_completed = 0;
+		philos[i].is_meal_completed = &(config->are_meals_completed[i]);
 		philos[i].config = config;
 		i++;
 	}
@@ -369,14 +415,27 @@ t_bool
 			free(*philos);
 			*philos = NULL;
 		}
-		free(*config);
-		*config = NULL;
+		ft_clear_config(config);
 		return (FALSE);
 	}
 	return (TRUE);
 }
 
 void
+	ft_join_threads(pthread_t *ths_philo, pthread_t *ths_dr, int num_of_ths)
+{
+	int	i;
+
+	i = 0;
+	while (i < num_of_ths)
+	{
+		pthread_join(ths_philo[i], NULL);
+		pthread_join(ths_dr[i], NULL);
+		i++;
+	}
+}
+
+t_bool
 	ft_start_threads(pthread_t *ths_philo, pthread_t *ths_dr, t_philo *philos, t_config *config)
 {
 	int	i;
@@ -384,55 +443,47 @@ void
 	i = 0;
 	while (i < config->num_of_philos)
 	{
-		if (pthread_create(&ths_philo[i], NULL, ft_loop_philo, &philos[i])
-			|| pthread_create(&ths_dr[i], NULL, ft_monitor_philo, &philos[i]))
+		if (pthread_create(&ths_philo[i], NULL, ft_loop_philo, &philos[i]))
 		{
 			pthread_mutex_lock(&(config->screen_lock));
 			config->is_completed = TRUE;
 			pthread_mutex_unlock(&(config->screen_lock));
-			return ;
+			ft_join_threads(ths_philo, ths_dr, i);
+			return (FALSE);
+		}
+		if (pthread_create(&ths_dr[i], NULL, ft_monitor_philo, &philos[i]))
+		{
+			pthread_mutex_lock(&(config->screen_lock));
+			config->is_completed = TRUE;
+			pthread_mutex_unlock(&(config->screen_lock));
+			ft_join_threads(ths_philo, ths_dr, i);
+			pthread_join(ths_philo[i], NULL);
+			return (FALSE);
 		}
 		i++;
 	}
+	return (TRUE);
 }
 
-void
-	ft_join_threads(pthread_t *ths_philo, pthread_t *ths_dr, t_config *config)
-{
-	int	i;
-
-	i = 0;
-	while (i < config->num_of_philos)
-	{
-		pthread_join(ths_philo[i], NULL);
-		pthread_join(ths_dr[i], NULL);
-		i++;
-	}
-}
 void
 	ft_clean_up_all(pthread_t **ths_philo, pthread_t **ths_dr, t_philo **philos, t_config **config)
 {
-	int i;
-
-	i = 0;
-	while (i < (*config)->num_of_philos)
-	{
-		pthread_mutex_destroy(&((*config)->forks[i]));
-		i++;
-	}
+	ft_destroy_forks(*config, (*config)->num_of_philos);
 	pthread_mutex_destroy(&((*config)->screen_lock));
 	free(*ths_philo);
 	*ths_philo = NULL;
 	free(*ths_dr);
 	*ths_dr = NULL;
-	free((*config)->forks);
-	(*config)->forks = NULL;
-	free((*config)->are_forks_taken);
-	(*config)->are_forks_taken = NULL;
 	free(*philos);
 	*philos = NULL;
-	free(*config);
-	*config = NULL;
+	ft_clear_config(config);
+}
+
+int
+	exit_with_error(void)
+{
+	ft_putstr_fd(ERROR_MESSAGE, STDERR_FILENO);
+	return (EXIT_FAILURE);
 }
 
 int
@@ -444,11 +495,11 @@ int
 	t_philo			*philos;
 
 	if (ac <= 4 || 7 <= ac || !ft_init_config(&config, ac, av))
-		return (EXIT_FAILURE);
+		return (exit_with_error());
 	if (!ft_init_philos(&ths_philo, &ths_dr, &philos, &config))
-		return (EXIT_FAILURE);
-	ft_start_threads(ths_philo, ths_dr, philos, config);
-	ft_join_threads(ths_philo, ths_dr, config);
+		return (exit_with_error());
+	if (ft_start_threads(ths_philo, ths_dr, philos, config))
+		ft_join_threads(ths_philo, ths_dr, config->num_of_philos);
 	ft_clean_up_all(&ths_philo, &ths_dr, &philos, &config);
 	return (EXIT_SUCCESS);
 }

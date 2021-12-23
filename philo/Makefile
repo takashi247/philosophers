@@ -16,20 +16,22 @@ SRCS		:= $(addprefix $(SRCSDIR), $(SRCS))
 
 SRCSBONUS	:= $(addprefix $(SRCSDIR), $(SRCSBONUS))
 
+VPATH		:= $(SRCSDIR)
+
 INCLUDE		:= -I./include
 
 # LIBRARY		:= -L$(LIBDIR) -lft
 
 RM			:= rm -rf
 
-DEBUG		:= -fsanitize=address -g
+DEBUG		:= -fsanitize=thread -g
 
 all:		$(NAME)
 
 $(NAME):	$(OBJS) $(LIBPATH)
 	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $@
 
-$(OBJSDIR)%.o: $(SRCSDIR)%.c
+$(OBJSDIR)%.o: %.c
 	@if [ ! -d $(OBJSDIR) ]; then mkdir $(OBJSDIR); fi
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
