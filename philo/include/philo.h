@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 23:09:36 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/22 11:25:03 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/22 18:22:19 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,13 @@
 # include <stdlib.h>
 # include <sys/time.h>
 # include <limits.h>
+# include <string.h>
 
 # define MAX_NUM_THREADS 300
 # define THOUSAND 1000
 # define MONITORING_INTERVAL 200
 # define INITIAL_USLEEP_VALUE 1000
-# define MESSAGE_TO_TAKE_FORK "has taken a fork\n"
+# define MESSAGE_TO_TAKE_A_FORK "has taken a fork\n"
 # define MESSAGE_TO_EAT "is eating\n"
 # define MESSAGE_TO_SLEEP "is sleeping\n"
 # define MESSAGE_TO_THINK "is thinking\n"
@@ -44,9 +45,11 @@ typedef struct s_config
 	unsigned int	time_to_sleep;
 	int				num_of_must_eat;
 	t_bool			is_dead;
+	t_bool			is_completed;
 	pthread_mutex_t	screen_lock;
 	pthread_mutex_t	dead_lock;
 	pthread_mutex_t	*forks;
+	t_bool			*are_forks_taken;
 }	t_config;
 
 typedef struct s_philo
@@ -54,8 +57,15 @@ typedef struct s_philo
 	int				philo_id;
 	long			last_meal_time;
 	pthread_mutex_t	meal_time_lock;
+	int				num_of_meals_completed;
 	t_config		*config;
 }	t_philo;
+
+typedef struct s_fork
+{
+	pthread_mutex_t	*fork_lock;
+	t_bool			*is_taken;
+}	t_fork;
 
 /* utils_philo_1.c */
 int		ft_isdigit(int c);
