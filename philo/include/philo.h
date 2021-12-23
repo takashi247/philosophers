@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 23:09:36 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/22 18:22:19 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/23 14:59:33 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,6 @@ typedef struct s_config
 	t_bool			is_dead;
 	t_bool			is_completed;
 	pthread_mutex_t	screen_lock;
-	pthread_mutex_t	dead_lock;
 	pthread_mutex_t	*forks;
 	t_bool			*are_forks_taken;
 }	t_config;
@@ -56,7 +55,6 @@ typedef struct s_philo
 {
 	int				philo_id;
 	long			last_meal_time;
-	pthread_mutex_t	meal_time_lock;
 	int				num_of_meals_completed;
 	t_config		*config;
 }	t_philo;

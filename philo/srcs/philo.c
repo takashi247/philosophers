@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/23 10:50:25 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/23 15:02:32 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,14 +108,15 @@ void
 void
 	sleep_in_millisecond(unsigned int micro_sec)
 {
-	const long	start_time = get_time();
-	const long	time_to_sleep = (long)micro_sec;
+	const long		start_time = get_time();
+	const long		time_to_sleep = (long)micro_sec;
+	unsigned int	usleep_time;
 
 	while (get_time() - start_time < time_to_sleep)
 	{
-		micro_sec = INITIAL_USLEEP_VALUE;
-		micro_sec /= 2;
-		usleep(micro_sec);
+		usleep_time = INITIAL_USLEEP_VALUE;
+		usleep_time /= 2;
+		usleep(usleep_time);
 	}
 }
 
@@ -174,27 +175,27 @@ void
 	print_log(philo, MESSAGE_TO_THINK);
 }
 
-t_bool
-	ft_is_dead(t_philo *philo)
-{
-	t_bool	res;
+// t_bool
+// 	ft_is_dead(t_philo *philo)
+// {
+// 	t_bool	res;
 
-	pthread_mutex_lock(&(philo->config->screen_lock));
-	res = philo->config->is_dead;
-	pthread_mutex_unlock(&(philo->config->screen_lock));
-	return (res);
-}
+// 	pthread_mutex_lock(&(philo->config->screen_lock));
+// 	res = philo->config->is_dead;
+// 	pthread_mutex_unlock(&(philo->config->screen_lock));
+// 	return (res);
+// }
 
-t_bool
-	ft_is_completed(t_philo *philo)
-{
-	t_bool	res;
+// t_bool
+// 	ft_is_completed(t_philo *philo)
+// {
+// 	t_bool	res;
 
-	pthread_mutex_lock(&(philo->config->screen_lock));
-	res = philo->config->is_completed;
-	pthread_mutex_unlock(&(philo->config->screen_lock));
-	return (res);
-}
+// 	pthread_mutex_lock(&(philo->config->screen_lock));
+// 	res = philo->config->is_completed;
+// 	pthread_mutex_unlock(&(philo->config->screen_lock));
+// 	return (res);
+// }
 
 t_bool
 	ft_is_loop_end(t_philo *philo)
@@ -208,27 +209,33 @@ t_bool
 }
 
 void
-	*loop_philo(void *arg)
+	find_forks(t_fork *right_fork, t_fork *left_fork, const t_philo *philo)
 {
-	t_philo			*philo;
-	t_fork			right_fork;
-	t_fork			left_fork;
-
-	philo = (t_philo *)arg;
-	right_fork.fork_lock = &(philo->config->forks[philo->philo_id - 1]);
-	right_fork.is_taken = &(philo->config->are_forks_taken[philo->philo_id - 1]);
+	right_fork->fork_lock = &(philo->config->forks[philo->philo_id - 1]);
+	right_fork->is_taken = &(philo->config->are_forks_taken[philo->philo_id - 1]);
 	if (philo->philo_id < philo->config->num_of_philos)
 	{
-		left_fork.fork_lock = &(philo->config->forks[philo->philo_id]);
-		left_fork.is_taken = &(philo->config->are_forks_taken[philo->philo_id]);
+		left_fork->fork_lock = &(philo->config->forks[philo->philo_id]);
+		left_fork->is_taken = &(philo->config->are_forks_taken[philo->philo_id]);
 	}
 	else
 	{
-		left_fork.fork_lock = &(philo->config->forks[0]);
-		left_fork.is_taken = &(philo->config->are_forks_taken[0]);
+		left_fork->fork_lock = &(philo->config->forks[0]);
+		left_fork->is_taken = &(philo->config->are_forks_taken[0]);
 	}
+}
+
+void
+	*ft_loop_philo(void *arg)
+{
+	t_philo	*philo;
+	t_fork	right_fork;
+	t_fork	left_fork;
+
+	philo = (t_philo *)arg;
 	if (philo->philo_id % 2 == 0)
 		usleep(200);
+	find_forks(&right_fork, &left_fork, philo);
 	while (!ft_is_loop_end(philo))
 	{
 		ft_take_forks(philo, &right_fork, &left_fork);
@@ -288,142 +295,160 @@ t_bool
 	ret = pthread_mutex_init(&((*config)->screen_lock), NULL);
 	if (ret != 0)
 		return (FALSE);
-	ret = pthread_mutex_init(&((*config)->dead_lock), NULL);
-	if (ret != 0)
-		return (FALSE);
 	return (TRUE);
 }
 
-t_philo
-	*ft_create_philo(int i, t_config *conf)
+void
+	*ft_monitor_philo(void *arg)
 {
-	t_philo	*philo;
-	int		ret;
-
-	philo = (t_philo *)malloc(sizeof(t_philo));
-	if (!philo)
-		return (NULL);
-	ret = pthread_mutex_init(&(philo->meal_time_lock), NULL);
-	if (ret != 0)
-	{
-		free(philo);
-		philo = NULL;
-		return (NULL);
-	}
-	philo->philo_id = i + 1;
-	philo->last_meal_time = get_time();
-	philo->config = conf;
-	return (philo);
-}
-
-t_bool
-	ft_monitor_philos(t_config *config, t_philo *philos)
-{
-	int			i;
+	t_philo		*philo;
+	t_config	*config;
 	long		current_time;
-	const int	num_of_philos = config->num_of_philos;
-	const long	time_to_die = (long)config->time_to_die;
+	long		time_to_die;
 
-	i = 0;
-	while(i < num_of_philos)
+	philo = (t_philo *)arg;
+	config = philo->config;
+	time_to_die = (long)philo->config->time_to_die;
+	while(!ft_is_loop_end(philo))
 	{
 		current_time = get_time();
 		pthread_mutex_lock(&(config->screen_lock));
-		if (current_time - philos[i].last_meal_time >= time_to_die)
+		if (current_time - philo->last_meal_time >= time_to_die)
 		{
 			config->is_dead = TRUE;
-			print_msg(MESSAGE_TO_DIE, current_time, philos[i].philo_id);
+			print_msg(MESSAGE_TO_DIE, current_time, philo->philo_id);
 			pthread_mutex_unlock(&(config->screen_lock));
-			return (FALSE);
+			break;
 		}
 		pthread_mutex_unlock(&(config->screen_lock));
+		usleep(MONITORING_INTERVAL);
+	}
+	return ((void *)EXIT_SUCCESS);
+}
+
+t_philo
+	*create_philos(t_config *config)
+{
+	int		i;
+	t_philo	*philos;
+
+	philos = (t_philo *)malloc(sizeof(t_philo) * config->num_of_philos);
+	if (!philos)
+		return (NULL);
+	i = 0;
+	while (i < config->num_of_philos)
+	{
+		philos[i].philo_id = i + 1;
+		philos[i].last_meal_time = get_time();
+		philos[i].config = config;
 		i++;
 	}
+	return (philos);
+}
+
+t_bool
+	ft_init_philos(pthread_t **ths_philo, pthread_t **ths_dr, t_philo **philos, t_config **config)
+{
+	*ths_philo = (pthread_t *)malloc(sizeof(pthread_t) * (*config)->num_of_philos);
+	*ths_dr = (pthread_t *)malloc(sizeof(pthread_t) * (*config)->num_of_philos);
+	*philos = create_philos(*config);
+	if (!(*ths_philo) || !(*ths_dr) || !(*philos))
+	{
+		if (*ths_philo)
+		{
+			free(*ths_philo);
+			*ths_philo = NULL;
+		}
+		if (*ths_dr)
+		{
+			free(*ths_philo);
+			*ths_philo = NULL;
+		}
+		if (*philos)
+		{
+			free(*philos);
+			*philos = NULL;
+		}
+		free(*config);
+		*config = NULL;
+		return (FALSE);
+	}
 	return (TRUE);
+}
+
+void
+	ft_start_threads(pthread_t *ths_philo, pthread_t *ths_dr, t_philo *philos, t_config *config)
+{
+	int	i;
+
+	i = 0;
+	while (i < config->num_of_philos)
+	{
+		if (pthread_create(&ths_philo[i], NULL, ft_loop_philo, &philos[i])
+			|| pthread_create(&ths_dr[i], NULL, ft_monitor_philo, &philos[i]))
+		{
+			pthread_mutex_lock(&(config->screen_lock));
+			config->is_completed = TRUE;
+			pthread_mutex_unlock(&(config->screen_lock));
+			return ;
+		}
+		i++;
+	}
+}
+
+void
+	ft_join_threads(pthread_t *ths_philo, pthread_t *ths_dr, t_config *config)
+{
+	int	i;
+
+	i = 0;
+	while (i < config->num_of_philos)
+	{
+		pthread_join(ths_philo[i], NULL);
+		pthread_join(ths_dr[i], NULL);
+		i++;
+	}
+}
+void
+	ft_clean_up_all(pthread_t **ths_philo, pthread_t **ths_dr, t_philo **philos, t_config **config)
+{
+	int i;
+
+	i = 0;
+	while (i < (*config)->num_of_philos)
+	{
+		pthread_mutex_destroy(&((*config)->forks[i]));
+		i++;
+	}
+	pthread_mutex_destroy(&((*config)->screen_lock));
+	free(*ths_philo);
+	*ths_philo = NULL;
+	free(*ths_dr);
+	*ths_dr = NULL;
+	free((*config)->forks);
+	(*config)->forks = NULL;
+	free((*config)->are_forks_taken);
+	(*config)->are_forks_taken = NULL;
+	free(*philos);
+	*philos = NULL;
+	free(*config);
+	*config = NULL;
 }
 
 int
 	main(int ac, char **av)
 {
-	int				ret;
-	pthread_t		*ths;
+	pthread_t		*ths_philo;
+	pthread_t		*ths_dr;
 	t_config		*config;
 	t_philo			*philos;
-	int				i;
 
 	if (ac <= 4 || 7 <= ac || !ft_init_config(&config, ac, av))
 		return (EXIT_FAILURE);
-	ths = (pthread_t *)malloc(sizeof(pthread_t) * config->num_of_philos);
-	philos = (t_philo *)malloc(sizeof(t_philo) * config->num_of_philos);
-	if (!ths || !philos)
-	{
-		free(config);
-		config = NULL;
-		if (ths)
-		{
-			free(ths);
-			ths = NULL;
-		}
+	if (!ft_init_philos(&ths_philo, &ths_dr, &philos, &config))
 		return (EXIT_FAILURE);
-	}
-	i = 0;
-	while (i < config->num_of_philos)
-	{
-		ret = pthread_mutex_init(&(philos[i].meal_time_lock), NULL);
-		if (ret != 0)
-		{
-			// stop threads currently running
-			free(philos);
-			philos = NULL;
-			free(config);
-			config = NULL;
-			return (EXIT_FAILURE);
-		}
-		philos[i].philo_id = i + 1;
-		philos[i].last_meal_time = get_time();
-		philos[i].config = config;
-		ret = pthread_create(&ths[i], NULL, loop_philo, &philos[i]);
-		if (ret != 0)
-		{
-			// stop threads currently running
-			free(philos);
-			philos = NULL;
-			free(config);
-			config = NULL;
-			return (EXIT_FAILURE);
-		}
-		i++;
-	}
-	while (1)
-	{
-		if (!ft_monitor_philos(config, philos))
-			break;
-		usleep(MONITORING_INTERVAL);
-	}
-	i = 0;
-	while (i < config->num_of_philos)
-	{
-		pthread_join(ths[i], NULL);
-		i++;
-	}
-	free(ths);
-	ths = NULL;
-	i = 0;
-	while (i < config->num_of_philos)
-	{
-		pthread_mutex_destroy(&(config->forks[i]));
-		pthread_mutex_destroy(&(philos[i].meal_time_lock));
-		i++;
-	}
-	free(config->forks);
-	config->forks = NULL;
-	free(config->are_forks_taken);
-	config->are_forks_taken = NULL;
-	free(philos);
-	philos = NULL;
-	pthread_mutex_destroy(&(config->screen_lock));
-	pthread_mutex_destroy(&(config->dead_lock));
-	free(config);
-	config = NULL;
+	ft_start_threads(ths_philo, ths_dr, philos, config);
+	ft_join_threads(ths_philo, ths_dr, config);
+	ft_clean_up_all(&ths_philo, &ths_dr, &philos, &config);
 	return (EXIT_SUCCESS);
 }
