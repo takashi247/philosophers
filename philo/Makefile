@@ -40,7 +40,7 @@ clean:
 	$(RM) -rf *.dSYM
 
 fclean:		clean
-	$(RM) $(NAME) $(CHECKER)
+	$(RM) $(NAME)
 
 re:			fclean all
 
