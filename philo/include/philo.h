@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 23:09:36 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/24 01:16:43 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/24 11:35:45 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,5 +92,46 @@ char	*ft_itoa(int n);
 
 /* ft_convert_time2str.c */
 char	*ft_convert_time2str(long time);
+
+/* ft_init_philo.c */
+t_bool	ft_init_philos(pthread_t **ths_philo, pthread_t **ths_dr, \
+t_philo **philos, t_config **config);
+
+/* ft_monitor_philo.c */
+void	*ft_monitor_philo(void *arg);
+
+/* philo.c */
+void	ft_destroy_forks(t_config *config, int num_of_forks);
+void	ft_clear_config(t_config **config);
+
+/* ft_print_log.c */
+void	ft_print_log(t_philo *philo, char *msg);
+t_bool	ft_print_msg(char *msg, long current_time, int philo_id);
+
+/* start_n_join_ths.c */
+void	ft_join_threads(pthread_t *ths_philo, pthread_t *ths_dr, \
+int num_of_ths);
+t_bool	ft_start_threads(pthread_t *ths_philo, pthread_t *ths_dr, \
+t_philo *philos, t_config *config);
+
+/* ft_loop_philo.c */
+t_bool	ft_is_loop_end(t_philo *philo);
+void	*ft_loop_philo(void *arg);
+
+/* philo_actions.c */
+void	ft_drop_forks(t_fork *right_fork, t_fork *left_fork);
+void	ft_take_forks(t_philo *philo, t_fork *right_fork, t_fork *left_fork);
+void	ft_eat_spaghetti(t_philo *philo);
+void	ft_sleep_tight(t_philo *philo);
+void	ft_think_deep(t_philo *philo);
+
+/* philo_actions_util.c */
+void	ft_take_a_fork(t_fork *fork);
+void	ft_drop_a_fork(t_fork *fork);
+void	ft_sleep_in_millisecond(unsigned int micro_sec);
+long	ft_get_time(void);
+
+/* ft_init_config.c */
+t_bool	ft_init_config(t_config **config, int ac, char **av);
 
 #endif
