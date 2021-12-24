@@ -20,8 +20,6 @@ VPATH		:= $(SRCSDIR)
 
 INCLUDE		:= -I./include
 
-# LIBRARY		:= -L$(LIBDIR) -lft
-
 RM			:= rm -rf
 
 DEBUG		:= -fsanitize=thread -g
