@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 09:37:18 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/24 10:50:03 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/25 15:43:47 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ void
 	t_fork	left_fork;
 
 	philo = (t_philo *)arg;
+	philo->last_meal_time = ft_get_time();
 	if (philo->philo_id % 2 == 0)
 		usleep(200);
 	find_forks(&right_fork, &left_fork, philo);
