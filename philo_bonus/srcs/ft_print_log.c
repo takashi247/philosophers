@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 10:52:13 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/24 17:28:05 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/25 12:28:05 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,7 @@ void
 	t_bool	res;
 	long	current_time;
 
-	pthread_mutex_lock(&(philo->config->screen_lock));
+	sem_wait(philo->waiter);
 	if (!philo->config->is_dead && !philo->config->is_completed)
 	{
 		current_time = ft_get_time();
@@ -100,5 +100,5 @@ void
 				*(philo->is_meal_completed) = TRUE;
 		}
 	}
-	pthread_mutex_unlock(&(philo->config->screen_lock));
+	sem_post(philo->waiter);
 }

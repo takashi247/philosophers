@@ -6,24 +6,22 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 10:45:07 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/24 17:28:05 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/25 23:07:12 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
 
 void
-	ft_take_a_fork(t_fork *fork)
+	ft_take_a_fork(sem_t *forks)
 {
-	pthread_mutex_lock(fork->fork_lock);
-	*(fork->is_taken) = TRUE;
+	sem_wait(forks);
 }
 
 void
-	ft_drop_a_fork(t_fork *fork)
+	ft_drop_a_fork(sem_t *forks)
 {
-	*(fork->is_taken) = FALSE;
-	pthread_mutex_unlock(fork->fork_lock);
+	sem_post(forks);
 }
 
 void

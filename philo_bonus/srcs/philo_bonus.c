@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/24 17:30:43 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/25 17:49:58 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,14 +22,14 @@ static void destructor() {
 */
 
 void
-	ft_destroy_forks(t_config *config, int num_of_forks)
+	wait_processes(t_config *config)
 {
 	int	i;
 
 	i = 0;
-	while (i < num_of_forks)
+	while (i < config->num_of_philos)
 	{
-		pthread_mutex_destroy(&(config->forks[i]));
+		waitpid(config->philo_pids[i], NULL, 0);
 		i++;
 	}
 }
@@ -37,15 +37,10 @@ void
 void
 	ft_clear_config(t_config **config)
 {
-	if ((*config)->forks)
+	if ((*config)->philo_pids)
 	{
-		free((*config)->forks);
-		(*config)->forks = NULL;
-	}
-	if ((*config)->are_forks_taken)
-	{
-		free((*config)->are_forks_taken);
-		(*config)->are_forks_taken = NULL;
+		free((*config)->philo_pids);
+		(*config)->philo_pids = NULL;
 	}
 	if ((*config)->are_meals_completed)
 	{
@@ -57,41 +52,40 @@ void
 }
 
 static void
-	clean_up_all(pthread_t **ths_philo, pthread_t **ths_dr, t_philo **philos,
+	clean_up_all(t_philo **philos, sem_t *fork, sem_t *waiter,
 	t_config **config)
 {
-	ft_destroy_forks(*config, (*config)->num_of_philos);
-	pthread_mutex_destroy(&((*config)->screen_lock));
-	free(*ths_philo);
-	*ths_philo = NULL;
-	free(*ths_dr);
-	*ths_dr = NULL;
 	free(*philos);
 	*philos = NULL;
+	sem_close(fork);
+	sem_close(waiter);
 	ft_clear_config(config);
 }
 
-static int
-	exit_with_error(void)
+void
+	ft_exit_with_error(void)
 {
 	ft_putstr_fd(ERROR_MESSAGE, STDERR_FILENO);
-	return (EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 }
 
 int
 	main(int ac, char **av)
 {
-	pthread_t		*ths_philo;
-	pthread_t		*ths_dr;
-	t_config		*config;
-	t_philo			*philos;
+	sem_t		*forks;
+	sem_t		*waiter;
+	t_config	*config;
+	t_philo		*philos;
 
+	config = NULL;
 	if (ac <= 4 || 7 <= ac || !ft_init_config(&config, ac, av))
-		return (exit_with_error());
-	if (!ft_init_philos(&ths_philo, &ths_dr, &philos, &config))
-		return (exit_with_error());
-	if (ft_start_threads(ths_philo, ths_dr, philos, config))
-		ft_join_threads(ths_philo, ths_dr, config->num_of_philos);
-	clean_up_all(&ths_philo, &ths_dr, &philos, &config);
+		ft_exit_with_error();
+	philos = ft_create_philos(config);
+	if (!philos)
+		ft_exit_with_error();
+	ft_init_sems(&forks, &waiter, &config);
+	ft_start_processes(philos, &forks, &waiter, config);
+	wait_processes(config);
+	clean_up_all(&philos, forks, waiter, &config);
 	return (EXIT_SUCCESS);
 }

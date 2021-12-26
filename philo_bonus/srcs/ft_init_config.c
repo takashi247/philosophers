@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 01:46:37 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/24 17:28:05 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/25 16:12:19 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,47 +30,17 @@ static void
 static t_bool
 	malloc_config_params(t_config **config)
 {
-	(*config)->forks = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t)
-			* ((*config)->num_of_philos));
-	(*config)->are_forks_taken = (t_bool *)malloc(sizeof(t_bool)
-			* ((*config)->num_of_philos));
 	(*config)->are_meals_completed = (t_bool *)malloc(sizeof(t_bool)
 			* ((*config)->num_of_philos));
-	if (!((*config)->forks) || !((*config)->are_forks_taken)
-		|| !((*config)->are_meals_completed))
+	(*config)->philo_pids = (pid_t *)malloc(sizeof(pid_t)
+			* ((*config)->num_of_philos));
+	if (!((*config)->are_meals_completed) || !((*config)->philo_pids))
 	{
 		ft_clear_config(config);
 		return (FALSE);
 	}
-	memset((*config)->are_forks_taken, 0, sizeof(t_bool)
-		* ((*config)->num_of_philos));
 	memset((*config)->are_meals_completed, 0, sizeof(t_bool)
 		* ((*config)->num_of_philos));
-	return (TRUE);
-}
-
-static t_bool
-	init_mutexes(t_config **config)
-{
-	int	i;
-
-	i = 0;
-	while (i < (*config)->num_of_philos)
-	{
-		if (pthread_mutex_init(&((*config)->forks[i]), NULL))
-		{
-			ft_destroy_forks(*config, i);
-			ft_clear_config(config);
-			return (FALSE);
-		}
-		i++;
-	}
-	if (pthread_mutex_init(&((*config)->screen_lock), NULL))
-	{
-		ft_destroy_forks(*config, (*config)->num_of_philos);
-		ft_clear_config(config);
-		return (FALSE);
-	}
 	return (TRUE);
 }
 
@@ -87,8 +57,6 @@ t_bool
 	if ((*config)->num_of_philos > MAX_NUM_THREADS)
 		return (FALSE);
 	if (!malloc_config_params(config))
-		return (FALSE);
-	if (!init_mutexes(config))
 		return (FALSE);
 	return (TRUE);
 }

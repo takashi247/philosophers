@@ -6,25 +6,27 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 10:43:01 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/24 17:28:05 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/25 22:03:07 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
 
 void
-	ft_drop_forks(t_fork *right_fork, t_fork *left_fork)
+	ft_drop_forks(t_philo *philo)
 {
-	ft_drop_a_fork(right_fork);
-	ft_drop_a_fork(left_fork);
+	ft_drop_a_fork(philo->forks);
+	ft_drop_a_fork(philo->forks);
 }
 
 void
-	ft_take_forks(t_philo *philo, t_fork *right_fork, t_fork *left_fork)
+	ft_take_forks(t_philo *philo)
 {
-	ft_take_a_fork(right_fork);
+	ft_take_a_fork(philo->forks);
 	ft_print_log(philo, MESSAGE_TO_TAKE_A_FORK);
-	ft_take_a_fork(left_fork);
+	// sem_wait(philo->waiter);
+	ft_take_a_fork(philo->forks);
+	// sem_post(philo->waiter);
 	ft_print_log(philo, MESSAGE_TO_TAKE_A_FORK);
 }
 
