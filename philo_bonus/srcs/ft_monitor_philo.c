@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 10:49:08 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/25 23:57:12 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/26 11:09:20 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,17 +38,15 @@ static t_bool
 	return (res);
 }
 
-void
-	*ft_monitor_philo(void *arg)
+int
+	ft_monitor_philo(t_philo *philo)
 {
-	t_philo		*philo;
 	t_config	*config;
 	long		current_time;
 	long		time_to_die;
 	sem_t		*waiter;
 
 	waiter = sem_open(SEM4WAITER, 0);
-	philo = (t_philo *)arg;
 	config = philo->config;
 	time_to_die = (long)philo->config->time_to_die;
 	while (!is_monitor_loop_end(philo, waiter))
@@ -67,5 +65,5 @@ void
 		sem_post(waiter);
 	}
 	sem_close(waiter);
-	return ((void *)EXIT_SUCCESS);
+	return (EXIT_SUCCESS);
 }

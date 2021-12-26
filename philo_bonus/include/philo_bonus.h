@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 17:16:37 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/26 10:55:56 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/26 11:12:15 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,7 @@ typedef struct s_config
 	t_bool			is_completed;
 	t_bool			*are_meals_completed;
 	pid_t			*philo_pids;
+	pid_t			*dr_pids;
 }	t_config;
 
 typedef struct s_philo
@@ -98,7 +99,7 @@ char	*ft_convert_time2str(long time);
 t_philo	*ft_create_philos(t_config *config);
 
 /* ft_monitor_philo.c */
-void	*ft_monitor_philo(void *arg);
+int		ft_monitor_philo(t_philo *philo);
 
 /* philo_bonus.c */
 void	ft_clear_config(t_config **config);
@@ -110,7 +111,7 @@ t_bool	ft_print_msg(char *msg, long current_time, int philo_id);
 
 /* ft_loop_philo.c */
 t_bool	ft_is_loop_end(t_philo *philo);
-void	*ft_loop_philo(void *arg);
+int		ft_loop_philo(t_philo *philo);
 
 /* philo_actions.c */
 void	ft_drop_forks(t_philo *philo);

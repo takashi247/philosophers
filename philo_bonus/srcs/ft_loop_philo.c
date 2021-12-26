@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 09:37:18 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/25 23:30:02 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/26 14:57:51 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,21 +23,18 @@ t_bool
 	return (res);
 }
 
-void
-	*ft_loop_philo(void *arg)
+int
+	ft_loop_philo(t_philo *philo)
 {
-	t_philo	*philo;
-
-	philo = (t_philo *)arg;
 	ft_open_sems(philo);
-	if (philo->philo_id % 2 == 0)
-		usleep(200);
+	// if (philo->philo_id % 2 == 0)
+	// 	usleep(200);
 	if (philo->config->num_of_philos == 1)
 	{
 		ft_take_a_fork(philo->forks);
 		ft_print_log(philo, MESSAGE_TO_TAKE_A_FORK);
 		ft_drop_a_fork(philo->forks);
-		return ((void *)EXIT_SUCCESS);
+		return (EXIT_SUCCESS);
 	}
 	while (!ft_is_loop_end(philo))
 	{
@@ -47,6 +44,7 @@ void
 		ft_sleep_tight(philo);
 		ft_think_deep(philo);
 	}
-	ft_clear_sems(philo->forks, philo->waiter);
-	return ((void *)EXIT_SUCCESS);
+	sem_close(philo->forks);
+	sem_close(philo->waiter);
+	return (EXIT_SUCCESS);
 }

@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 01:46:37 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/25 16:12:19 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/26 10:59:17 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,10 @@ static t_bool
 			* ((*config)->num_of_philos));
 	(*config)->philo_pids = (pid_t *)malloc(sizeof(pid_t)
 			* ((*config)->num_of_philos));
-	if (!((*config)->are_meals_completed) || !((*config)->philo_pids))
+	(*config)->dr_pids = (pid_t *)malloc(sizeof(pid_t)
+			* ((*config)->num_of_philos));
+	if (!((*config)->are_meals_completed) || !((*config)->philo_pids)
+		|| !((*config)->dr_pids))
 	{
 		ft_clear_config(config);
 		return (FALSE);
