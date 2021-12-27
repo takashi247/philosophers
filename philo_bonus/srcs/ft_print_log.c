@@ -6,14 +6,14 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 10:52:13 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/25 12:28:05 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/27 13:37:43 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
 
-static void
-	safe_free(char **str)
+void
+	ft_safe_free(char **str)
 {
 	if (*str)
 		free(*str);
@@ -31,17 +31,17 @@ static char
 		return (NULL);
 	tmp = str_combined;
 	str_combined = ft_strjoin(tmp, str_id);
-	safe_free(&tmp);
+	ft_safe_free(&tmp);
 	if (!str_combined)
 		return (NULL);
 	tmp = str_combined;
 	str_combined = ft_strjoin(tmp, " ");
-	safe_free(&tmp);
+	ft_safe_free(&tmp);
 	if (!str_combined)
 		return (NULL);
 	tmp = str_combined;
 	str_combined = ft_strjoin(tmp, msg);
-	safe_free(&tmp);
+	ft_safe_free(&tmp);
 	if (!str_combined)
 		return (NULL);
 	return (str_combined);
@@ -62,7 +62,7 @@ t_bool
 	if (!str_time || !str_id)
 	{
 		if (str_time)
-			safe_free(&str_time);
+			ft_safe_free(&str_time);
 		res = FALSE;
 		return (res);
 	}
@@ -71,9 +71,9 @@ t_bool
 		res = FALSE;
 	else
 		ft_putstr_fd(str_combined, STDOUT_FILENO);
-	safe_free(&str_combined);
-	safe_free(&str_time);
-	safe_free(&str_id);
+	ft_safe_free(&str_combined);
+	ft_safe_free(&str_time);
+	ft_safe_free(&str_id);
 	return (res);
 }
 
@@ -83,13 +83,17 @@ void
 	t_bool	res;
 	long	current_time;
 
-	sem_wait(philo->waiter);
-	if (!philo->config->is_dead && !philo->config->is_completed)
+	sem_wait(philo->config->sem_screen);
+	if (!philo->is_end)
 	{
 		current_time = ft_get_time();
 		res = ft_print_msg(msg, current_time, philo->philo_id);
 		if (!res)
-			philo->config->is_completed = TRUE;
+		{
+			philo->is_end = TRUE;
+			sem_post(philo->config->sem_screen);
+			ft_end_simulation(philo);
+		}
 		if (!ft_strncmp(msg, MESSAGE_TO_EAT, ft_strlen(MESSAGE_TO_EAT)))
 			philo->last_meal_time = current_time;
 		if (!ft_strncmp(msg, MESSAGE_TO_SLEEP, ft_strlen(MESSAGE_TO_SLEEP)))
@@ -97,8 +101,8 @@ void
 			philo->num_of_meals_completed++;
 			if (philo->config->num_of_must_eat != NO_NUM_OF_MUST_EAT \
 			&& philo->num_of_meals_completed == philo->config->num_of_must_eat)
-				*(philo->is_meal_completed) = TRUE;
+				sem_post(philo->config->sem_end);
 		}
 	}
-	sem_post(philo->waiter);
+	sem_post(philo->config->sem_screen);
 }

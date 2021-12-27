@@ -22,7 +22,7 @@ INCLUDE		:= -I./include
 
 RM			:= rm -rf
 
-DEBUG		:= -fsanitize=thread -g
+DEBUG		:= -g #-fsanitize=thread
 
 all:		$(NAME)
 

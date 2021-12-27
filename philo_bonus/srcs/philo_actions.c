@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 10:43:01 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/25 22:03:07 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/27 13:05:17 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,18 +15,16 @@
 void
 	ft_drop_forks(t_philo *philo)
 {
-	ft_drop_a_fork(philo->forks);
-	ft_drop_a_fork(philo->forks);
+	ft_drop_a_fork(philo->config->forks);
+	ft_drop_a_fork(philo->config->forks);
 }
 
 void
 	ft_take_forks(t_philo *philo)
 {
-	ft_take_a_fork(philo->forks);
+	ft_take_a_fork(philo->config->forks);
 	ft_print_log(philo, MESSAGE_TO_TAKE_A_FORK);
-	// sem_wait(philo->waiter);
-	ft_take_a_fork(philo->forks);
-	// sem_post(philo->waiter);
+	ft_take_a_fork(philo->config->forks);
 	ft_print_log(philo, MESSAGE_TO_TAKE_A_FORK);
 }
 

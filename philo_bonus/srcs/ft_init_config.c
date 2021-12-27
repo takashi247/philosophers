@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 01:46:37 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/26 10:59:17 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/27 09:45:30 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,6 @@ static void
 	config->time_to_die = (unsigned int)ft_atoi_s(av[2]);
 	config->time_to_eat = (unsigned int)ft_atoi_s(av[3]);
 	config->time_to_sleep = (unsigned int)ft_atoi_s(av[4]);
-	config->is_dead = FALSE;
-	config->is_completed = FALSE;
 	if (ac == 6)
 		config->num_of_must_eat = ft_atoi_s(av[5]);
 	else
@@ -30,20 +28,13 @@ static void
 static t_bool
 	malloc_config_params(t_config **config)
 {
-	(*config)->are_meals_completed = (t_bool *)malloc(sizeof(t_bool)
-			* ((*config)->num_of_philos));
 	(*config)->philo_pids = (pid_t *)malloc(sizeof(pid_t)
 			* ((*config)->num_of_philos));
-	(*config)->dr_pids = (pid_t *)malloc(sizeof(pid_t)
-			* ((*config)->num_of_philos));
-	if (!((*config)->are_meals_completed) || !((*config)->philo_pids)
-		|| !((*config)->dr_pids))
+	if (!((*config)->philo_pids))
 	{
 		ft_clear_config(config);
 		return (FALSE);
 	}
-	memset((*config)->are_meals_completed, 0, sizeof(t_bool)
-		* ((*config)->num_of_philos));
 	return (TRUE);
 }
 

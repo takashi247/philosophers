@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 09:37:18 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/26 14:57:51 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/27 13:43:37 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,23 +17,36 @@ t_bool
 {
 	t_bool	res;
 
-	sem_wait(philo->waiter);
-	res = philo->config->is_dead || philo->config->is_completed;
-	sem_post(philo->waiter);
+	sem_wait(philo->config->sem_screen);
+	res = philo->is_end;
+	sem_post(philo->config->sem_screen);
 	return (res);
 }
 
-int
-	ft_loop_philo(t_philo *philo)
+static void
+	loop_for_solo(t_philo *philo)
 {
-	ft_open_sems(philo);
-	// if (philo->philo_id % 2 == 0)
-	// 	usleep(200);
+	ft_take_a_fork(philo->config->forks);
+	ft_print_log(philo, MESSAGE_TO_TAKE_A_FORK);
+	ft_drop_a_fork(philo->config->forks);
+	while (!ft_is_loop_end(philo))
+		usleep(200);
+}
+
+void
+	*ft_loop_philo(void *arg)
+{
+	t_philo	*philo;
+
+	philo = (t_philo *)arg;
+	sem_wait(philo->config->sem_screen);
+	philo->last_meal_time = ft_get_time();
+	sem_post(philo->config->sem_screen);
+	if (philo->philo_id % 2 == 0)
+		usleep(200);
 	if (philo->config->num_of_philos == 1)
 	{
-		ft_take_a_fork(philo->forks);
-		ft_print_log(philo, MESSAGE_TO_TAKE_A_FORK);
-		ft_drop_a_fork(philo->forks);
+		loop_for_solo(philo);
 		return (EXIT_SUCCESS);
 	}
 	while (!ft_is_loop_end(philo))
@@ -44,7 +57,5 @@ int
 		ft_sleep_tight(philo);
 		ft_think_deep(philo);
 	}
-	sem_close(philo->forks);
-	sem_close(philo->waiter);
 	return (EXIT_SUCCESS);
 }

@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 23:28:45 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/26 11:14:55 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/27 12:57:41 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,15 +20,27 @@ void
 	i = 0;
 	while (i < num_of_processes)
 	{
-		kill(config->philo_pids[i], SIGKILL);
-		kill(config->dr_pids[i], SIGKILL);
+		kill(config->philo_pids[i], SIGTERM);
 		i++;
 	}
 }
 
+static void
+	start_simulation(t_philo *philo)
+{
+	pthread_t	thr;
+
+	if (pthread_create(&thr, NULL, ft_loop_philo, philo))
+	{
+		ft_putstr_fd(PTHREAD_ERR_MSG, STDERR_FILENO);
+		ft_exit_with_error();
+	}
+	pthread_detach(thr);
+	exit(ft_monitor_philo(philo));
+}
+
 void
-	ft_start_processes(t_philo *philos, sem_t **forks, sem_t **waiter,
-	t_config *config)
+	ft_start_processes(t_philo *philos, t_config *config)
 {
 	int			i;
 
@@ -39,21 +51,11 @@ void
 		if (config->philo_pids[i] < 0)
 		{
 			ft_kill_processes(i, config);
-			ft_clear_sems(*forks, *waiter);
+			ft_clear_sems(config);
 			ft_exit_with_error();
 		}
-		if (!config->philo_pids[i])
-			exit(ft_loop_philo(&philos[i]));
-		config->dr_pids[i] = fork();
-		if (config->dr_pids[i] < 0)
-		{
-			ft_kill_processes(i, config);
-			kill(config->philo_pids[i], SIGKILL);
-			ft_clear_sems(*forks, *waiter);
-			ft_exit_with_error();
-		}
-		if (!config->dr_pids[i])
-			exit(ft_monitor_philo(&philos[i]));
+		if (config->philo_pids[i] == CHILD_PROCESS)
+			start_simulation(&philos[i]);
 		i++;
 	}
 }

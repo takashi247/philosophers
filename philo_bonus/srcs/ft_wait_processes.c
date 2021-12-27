@@ -1,35 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_init_philos.c                                   :+:      :+:    :+:   */
+/*   ft_wait_processes.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/12/24 09:26:39 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/27 09:47:27 by tnishina         ###   ########.fr       */
+/*   Created: 2021/12/26 21:57:08 by tnishina          #+#    #+#             */
+/*   Updated: 2021/12/27 13:40:34 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
 
-t_philo
-	*ft_create_philos(t_config *config)
+void
+	ft_wait_processes(t_config *config)
 {
-	int		i;
-	t_philo	*philos;
+	int			i;
 
-	philos = (t_philo *)malloc(sizeof(t_philo) * config->num_of_philos);
-	if (!philos)
-		return (NULL);
 	i = 0;
 	while (i < config->num_of_philos)
 	{
-		philos[i].philo_id = i + 1;
-		philos[i].last_meal_time = ft_get_time();
-		philos[i].num_of_meals_completed = 0;
-		philos[i].is_end = FALSE;
-		philos[i].config = config;
+		sem_wait(config->sem_end);
 		i++;
 	}
-	return (philos);
+	ft_kill_processes(config->num_of_philos, config);
 }
