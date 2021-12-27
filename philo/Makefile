@@ -22,7 +22,7 @@ INCLUDE		:= -I./include
 
 RM			:= rm -rf
 
-DEBUG		:= -fsanitize=thread -g
+DEBUG		:= -g #-fsanitize=thread
 
 all:		$(NAME)
 
@@ -35,14 +35,17 @@ $(OBJSDIR)%.o: %.c
 
 clean:
 	$(RM) $(OBJSDIR)
-	$(RM) -rf *.dSYM
+	$(RM) *.dSYM
 
 fclean:		clean
 	$(RM) $(NAME)
 
 re:			fclean all
 
+test:		$(NAME)
+	@bash ./test/error_test.sh
+
 debug:		CFLAGS += $(DEBUG)
 debug:		re
 
-.PHONY:		all clean fclean re debug
+.PHONY:		all clean fclean re debug test

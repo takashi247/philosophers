@@ -37,12 +37,15 @@ bonus:		$(NAME)
 
 clean:
 	$(RM) $(OBJSDIR)
-	$(RM) -rf *.dSYM
+	$(RM) *.dSYM
 
 fclean:		clean
 	$(RM) $(NAME)
 
 re:			fclean all
+
+test:		$(NAME)
+	@bash ./test/error_test.sh
 
 debug:		CFLAGS += $(DEBUG)
 debug:		re
