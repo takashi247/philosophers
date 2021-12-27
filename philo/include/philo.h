@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 23:09:36 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/24 15:06:51 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/27 14:21:15 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 # define MAX_NUM_THREADS 300
 # define THOUSAND 1000
 # define MONITORING_INTERVAL_IN_MS 9
-# define INITIAL_USLEEP_VALUE 1000
+# define INITIAL_USLEEP_VALUE 500
 # define NO_NUM_OF_MUST_EAT -1
 # define MESSAGE_TO_TAKE_A_FORK "has taken a fork\n"
 # define MESSAGE_TO_EAT "is eating\n"

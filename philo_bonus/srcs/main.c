@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 00:19:23 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/27 13:59:36 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/27 14:32:26 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 // __attribute__((destructor))
 // static void destructor() {
-//     system("leaks -q philo");
+//     system("leaks -q philo_bonus");
 // }
 
 void
