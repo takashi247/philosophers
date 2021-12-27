@@ -6,7 +6,7 @@
 /*   By: tnishina <tnishina@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/24 10:45:07 by tnishina          #+#    #+#             */
-/*   Updated: 2021/12/27 13:25:19 by tnishina         ###   ########.fr       */
+/*   Updated: 2021/12/27 13:53:36 by tnishina         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,14 @@ void
 {
 	const long		start_time = ft_get_time();
 	const long		time_to_sleep = (long)micro_sec;
+	long			sleep_time;
 
+	sleep_time = (long)micro_sec;
 	while (ft_get_time() - start_time < time_to_sleep)
-		usleep(INITIAL_USLEEP_VALUE / 2);
+	{
+		sleep_time /= 2;
+		usleep(sleep_time);
+	}
 }
 
 long
